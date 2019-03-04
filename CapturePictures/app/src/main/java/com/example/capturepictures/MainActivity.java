@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -27,11 +31,9 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
-import android.widget.Button;
+
 import android.widget.Toast;
-import java.util.Timer;
-import 	java.util.TimerTask;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,10 +41,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,11 +71,13 @@ public class MainActivity extends AppCompatActivity {
     private ImageReader imageReader;
     private Timer myTimer;
     private Integer num;
+    private boolean isRecordingVideo = false;
+    private int width;
+    private int height;
 
     //Save to FILE
     private File file;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
-    private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
 
@@ -126,8 +133,8 @@ public class MainActivity extends AppCompatActivity {
                         .getOutputSizes(ImageFormat.JPEG);
 
             //Capture image with custom size
-            int width = 640;
-            int height = 480;
+            width = 640;
+            height = 480;
             if(jpegSizes != null && jpegSizes.length > 0)
             {
                 width = jpegSizes[0].getWidth();
@@ -164,6 +171,30 @@ public class MainActivity extends AppCompatActivity {
                             image = reader.acquireLatestImage();
                             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                             byte[] bytes = new byte[buffer.capacity()];
+                            /*Log.d("MainActivity","Got bytes");
+
+                            Bitmap cameraBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            Log.d("MainActivity","cameraBitmap");
+
+                            Paint redPaint = new Paint();
+                            redPaint.setARGB(255, 255, 0, 0);
+
+                            Bitmap newImage = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                            Log.d("MainActivity","Creating new image");
+
+                            Canvas canvas = new Canvas(newImage);
+                            Log.d("MainActivity","Canvas");
+                            canvas.drawBitmap(cameraBitmap, 0f, 0f, null);
+                            Log.d("MainActivity","Drawing Bitmap");
+                            canvas.drawText(Long.toString(System.currentTimeMillis()),width*.8f,height*.8f,redPaint);
+                            Log.d("MainActivity","Drawing Text");
+
+                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                            Log.d("MainActivity","Stream");
+                            newImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                            Log.d("MainActivity","Compressing");
+                            byte[] byteArray = stream.toByteArray();
+                            Log.d("MainActivity","Converting to byte array");*/
                             buffer.get(bytes);
                             save(bytes);
 
@@ -292,12 +323,12 @@ public class MainActivity extends AppCompatActivity {
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
+        public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
             openCamera();
         }
 
         @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
 
         }
 
