@@ -42,11 +42,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.io.ByteArrayOutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -57,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
     //Check state orientation of output image
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static{
-        ORIENTATIONS.append(Surface.ROTATION_0,90);
-        ORIENTATIONS.append(Surface.ROTATION_90,0);
-        ORIENTATIONS.append(Surface.ROTATION_180,270);
+        ORIENTATIONS.append(Surface.ROTATION_0,270);
+        ORIENTATIONS.append(Surface.ROTATION_90,90);
+        ORIENTATIONS.append(Surface.ROTATION_180,0);
         ORIENTATIONS.append(Surface.ROTATION_270,180);
     }
 
@@ -74,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRecordingVideo = false;
     private int width;
     private int height;
+    private long currentDateTime;
+    private Date currentDate;
+    private DateFormat df;
 
     //Save to FILE
     private File file;
@@ -118,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 takePicture();
             }
 
-        }, 0, 5000);
+        }, 0, 1000);
     }
 
     private void takePicture() {
@@ -140,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            final ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,3);
+            final ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,1);
             List<Surface> outputSurface = new ArrayList<>(2);
             outputSurface.add(reader.getSurface());
             outputSurface.add(new Surface(textureView.getSurfaceTexture()));
@@ -160,7 +166,11 @@ public class MainActivity extends AppCompatActivity {
                 success = folder.mkdirs();
             }
             if (success) {
-                file = new File(Environment.getExternalStorageDirectory()+"/CapturePictures/"+num.toString()+".jpg");
+                currentDateTime = System.currentTimeMillis();
+                currentDate = new Date(currentDateTime);
+                df = new SimpleDateFormat("dd:MM:yy:HH:mm:ss");
+
+                file = new File(Environment.getExternalStorageDirectory()+"/CapturePictures/"+ df.format(currentDate) +".jpg");
                 num++;
 
                 ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
@@ -171,33 +181,8 @@ public class MainActivity extends AppCompatActivity {
                             image = reader.acquireLatestImage();
                             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                             byte[] bytes = new byte[buffer.capacity()];
-                            /*Log.d("MainActivity","Got bytes");
-
-                            Bitmap cameraBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            Log.d("MainActivity","cameraBitmap");
-
-                            Paint redPaint = new Paint();
-                            redPaint.setARGB(255, 255, 0, 0);
-
-                            Bitmap newImage = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                            Log.d("MainActivity","Creating new image");
-
-                            Canvas canvas = new Canvas(newImage);
-                            Log.d("MainActivity","Canvas");
-                            canvas.drawBitmap(cameraBitmap, 0f, 0f, null);
-                            Log.d("MainActivity","Drawing Bitmap");
-                            canvas.drawText(Long.toString(System.currentTimeMillis()),width*.8f,height*.8f,redPaint);
-                            Log.d("MainActivity","Drawing Text");
-
-                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                            Log.d("MainActivity","Stream");
-                            newImage.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                            Log.d("MainActivity","Compressing");
-                            byte[] byteArray = stream.toByteArray();
-                            Log.d("MainActivity","Converting to byte array");*/
                             buffer.get(bytes);
                             save(bytes);
-
                         }
                         catch (FileNotFoundException e)
                         {
@@ -209,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         finally {
                             {
+                                Log.d("Main Activity",Boolean.toString(image == null));
                                 if(image != null)
                                     image.close();
                             }
