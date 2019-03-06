@@ -5,10 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -35,13 +31,18 @@ import android.view.TextureView;
 import android.widget.Toast;
 import android.util.Log;
 
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import org.json.JSONObject;
+import org.json.JSONException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -201,13 +202,45 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     private void save(byte[] bytes) throws IOException {
-                        OutputStream outputStream = null;
+                        HttpURLConnection conn = null;
                         try{
-                            outputStream = new FileOutputStream(file);
-                            outputStream.write(bytes);
-                        }finally {
-                            if(outputStream != null)
-                                outputStream.close();
+                            URL url = new URL("http://142.1.200.140:10023/uploadPic/");
+                            conn = (HttpURLConnection) url.openConnection();
+                            conn.setRequestMethod("POST");
+                            conn.setDoOutput(true);
+
+                            JSONObject data = new JSONObject();
+                            try {
+                                data.put("Date",df.format(currentDate));
+                                data.put("Image",Arrays.toString(bytes).replace("[", "").replace("]", ""));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+
+                            byte[] outputBytes = data.toString().getBytes("UTF-8");
+
+                            DataOutputStream os = new DataOutputStream(conn.getOutputStream());
+                            os.write(outputBytes);
+                            os.flush();
+                            os.close();
+
+                            InputStream in = conn.getInputStream();
+                            InputStreamReader inputStreamReader = new InputStreamReader(in);
+
+                            String res = "";
+                            int inputStreamData = inputStreamReader.read();
+                            while (inputStreamData != -1) {
+                                char current = (char) inputStreamData;
+                                inputStreamData = inputStreamReader.read();
+                                res += current;
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (conn != null) {
+                                conn.disconnect();
+                            }
                         }
                     }
                 };
