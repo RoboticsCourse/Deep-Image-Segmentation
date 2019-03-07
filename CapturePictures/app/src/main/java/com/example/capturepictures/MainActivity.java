@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
             if (success) {
                 currentDateTime = System.currentTimeMillis();
                 currentDate = new Date(currentDateTime);
-                df = new SimpleDateFormat("dd:MM:yy:HH:mm:ss");
+                df = new SimpleDateFormat("y-MM-dd H:m:ss.SSSS");
 
                 file = new File(Environment.getExternalStorageDirectory()+"/CapturePictures/"+ df.format(currentDate) +".jpg");
                 num++;
