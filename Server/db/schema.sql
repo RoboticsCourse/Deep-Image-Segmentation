@@ -10,7 +10,12 @@ CREATE TABLE images (
 CREATE TABLE data (
         id INTEGER PRIMARY KEY,
         time VARCHAR(30) NOT NULL,
-        action VARCHAR(30) NOT NULL
+        F VARCHAR(15) NOT NULL,
+        S VARCHAR(15) NOT NULL,
+        Sensor1 VARCHAR(15) NOT NULL,
+        Sensor2 VARCHAR(15) NOT NULL,
+        State VARCHAR(5) NOT NULL,
+        Valid VARCHAR(1) NOT NULL
 );
 
 CREATE TABLE imgData (
@@ -18,4 +23,3 @@ CREATE TABLE imgData (
         imgId INTEGER NOT NULL,
         dataId INTEGER NOT NULL
 );
-
