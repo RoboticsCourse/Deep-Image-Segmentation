@@ -95,13 +95,11 @@ def splitVideo(db,conn,filename,millisec):
         ms += millisec
         fn = getTime(ms)
 
+        image = np.rot90(image,3)
+
         image_last = cv2.imread("./static-content/images/{}.jpg".format(lfn))
         if np.array_equal(image,image_last):
             break
-
-        (h, w) = image.shape[:2]
-        M = cv2.getRotationMatrix2D((w / 2, h / 2), 270, 1.0)
-        image = cv2.warpAffine(image, M, (h, w))
 
         cv2.imwrite("./static-content/images/" + fn  + ".jpg", image)     # save frame as PNG file
         cur = conn.cursor()
