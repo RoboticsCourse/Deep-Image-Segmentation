@@ -1,0 +1,9 @@
+.scrolling-wrapper {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: hidden;
+    white-space: nowrap;
+}  
+.card {
+    display: inline-block;
+}

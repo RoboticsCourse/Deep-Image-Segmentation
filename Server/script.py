@@ -28,6 +28,7 @@ def getAllImgs(conn):
 
 def getAllData(conn):
     cur = conn.cursor()
+    cur.execute("DELETE FROM data WHERE Valid='F'")
     cur.execute("SELECT time,id FROM data")
 
     rows = cur.fetchall()
@@ -37,10 +38,20 @@ def getAllData(conn):
         arr.append((time.encode('ascii'),id,"DATA"))
     return arr
 
+def getAllPairs(conn):
+    cur = conn.cursor()
+        
+    cur.execute("SELECT imgId,dataId FROM imgData")
+
+    rows = cur.fetchall()
+    return rows
+
 def pairImgData(db,conn):
     imgs = getAllImgs(conn)
+    arr = [x[0] for x in imgs]
+
     data = getAllData(conn)
-    pairs = 0
+    pairs = getAllPairs(conn)
 
     mergedArr = imgs + data
     mergedArr = sorted(mergedArr, key = lambda x: x[0])
@@ -50,36 +61,41 @@ def pairImgData(db,conn):
         if mergedArr[i][2] == "IMG" and mergedArr[i+1][2] == "DATA":
             imgDate = int(datetime.strptime(mergedArr[i][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s")) 
             dataDate = int(datetime.strptime(mergedArr[i+1][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
-            if abs(imgDate - dataDate) <= 5:
-                pairs =+ 1
+            if abs(imgDate - dataDate) <= 5 and ((mergedArr[i][1],mergedArr[i+1][1]) not in pairs):
                 cur = conn.cursor()
                 cur.execute(sql, (mergedArr[i][1],mergedArr[i+1][1]))
+                if mergedArr[i][0] in arr:
+                    arr.remove(mergedArr[i][0])
 
         elif mergedArr[i][2] == "DATA" and mergedArr[i+1][2] == "IMG":
             imgDate = int(datetime.strptime(mergedArr[i+1][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
             dataDate = int(datetime.strptime(mergedArr[i][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
-            if abs(imgDate - dataDate) <= 5:
-                pairs =+ 1
+            if abs(imgDate - dataDate) <= 5 and ((mergedArr[i+1][1],mergedArr[i][1]) not in pairs):
                 cur = conn.cursor()
                 cur.execute(sql, (mergedArr[i+1][1],mergedArr[i][1]))
-        
-    print("Made " + str(pairs) + " pairs")
+                if mergedArr[i+1][0] in arr:
+                    arr.remove(mergedArr[i+1][0])
+    print("Done making pairs")
+
+    sql = "DELETE FROM images WHERE filename=?"
+    for img in arr:
+        cur = conn.cursor()
+        cur.execute(sql, [img])
+        os.remove("./static-content/images/" + img + ".jpg")
+    print("Removed unneccessary imgs")
+
 
 def getTime(ms):
     s = ms/10000.0
     return datetime.fromtimestamp(s).strftime('%d:%m:%y:%H:%M:%S:%f')[0:-2]
 
-def splitVideo(db,conn,filename,millisec):
+def splitVideo(db,conn,filepath,millisec):
+    filename = filepath.split("/")[-1]
+    print(filename)
     date = int(datetime.strptime(filename, '%d:%m:%y:%H:%M:%S:%f').strftime("%s")) * 10000
     ms = date + int(filename[-4:])
 
-    vidcap = cv2.VideoCapture(filename +".mp4")
-
-    try:
-        if not os.path.exists('Images'):
-            os.makedirs('Images')
-    except OSError:
-        print ('Error: Creating directory of data')
+    vidcap = cv2.VideoCapture(filepath +".mp4")
 
     count = 1
     success = True
@@ -123,4 +139,3 @@ def main():
 
 
 main()
-

@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var fs = require('fs');
-const fse = require('fs-extra');
+const child_process = require('child_process');
 var port = 10023;
 
 const sqlite3 = require('sqlite3').verbose();
@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');
 var recentImg = "";
 var data = "";
 var serverOn = "F";
+var pairs = [];
 
 app.use(express.static('static-content'));
 app.use(bodyParser.json({ limit: '50mb', extended: true }))
@@ -26,46 +27,46 @@ app.get('/getInfo/', function (req, res) {
   res.json({ "filename": recentImg, "data": data, "serverOn": serverOn });
 })
 
-app.post('/uploadPic', function (req, res) {
-  var result = {};
-  console.log("COMES HERE");
-  if (serverOn) {
-    var obj = JSON.parse(Object.keys(req.body)[0]);
-    var date = obj.Date;
-    recentImg = date;
-    var img = (obj.Image).split(",");
+app.get('/getFiles/', function (req, res) {
+  const folderpath = "./static-content/images/";
+  child_process.execSync(`zip -r files *`, {
+    cwd: folderpath
+  });
+  res.download(folderpath + 'files.zip');
+})
 
-    console.log("Vid came");
-
-    var buffer = Buffer.alloc(img.length);
-    for (var i = 0; i < img.length; i++) {
-      buffer[i] = img[i];
+app.get('/getPairs/', function (req, res) {
+  let sql = 'select d.time,d.F,d.S,d.Sensor1,d.Sensor2,d.State,i.filename from imgData as imgD inner join data as d on d.id = imgD.dataId  inner join images as i on i.id = imgD.imgId';
+  pairs = [];
+  db.all(sql, function (err, rows) {
+    if (err != null) {
+      console.log(err);
+      callback(err);
     }
 
-    console.log("Inserting into db");
-
-    let sql = 'INSERT INTO images(filename) VALUES (?)';
-    db.run(sql, [date], function (err) {
-      if (err) {
-        res.status(409);
-        result["error"] = err.message;
-      } else {
-        res.status(201);
-        result["success"] = "Img successfully uploaded!";
-      }
+    rows.forEach((row) => {
+      pairs.push({
+        "State": row.State,
+        "Filename": (row.filename).split(":").join("_"),
+        "Sensor2": row.Sensor2,
+        "Forward": row.F,
+        "Data Time": row.time,
+        "Sensor1": row.Sensor1,
+        "Image Time": row.filename,
+        "Speed": row.S
+      });
     });
-
-    console.log("Saving it");
-
-    fse.outputFile("static-content/images/" + date + ".mp4", buffer, err => {
+    
+    fs.writeFile("./static-content/images/data.json", JSON.stringify(pairs), 'utf8', err => {
       if (err) {
         console.log(err);
       } else {
-        fs.chmodSync("static-content/images/" + date + ".mp4", 0655);
+        fs.chmodSync("./static-content/images/data.json", 0644);
       }
     });
-  }
-  res.json(result);
+
+    res.json({ "success": pairs });
+  });
 })
 
 app.post('/uploadData', function (req, res) {
@@ -100,11 +101,11 @@ app.post('/uploadData', function (req, res) {
     }
     res.json({ "success": "Data uploaded" });
   }
-  else if (objStr == "STOP"){
+  else if (objStr == "STOP") {
     serverOn = "F"
     res.json({ "success": "Server stopped" });
   }
-  else if (objStr == "START"){
+  else if (objStr == "START") {
     serverOn = "T"
     res.json({ "success": "Server started" });
   }
