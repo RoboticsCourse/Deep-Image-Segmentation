@@ -29,6 +29,7 @@ def getAllImgs(conn):
 def getAllData(conn):
     cur = conn.cursor()
     cur.execute("DELETE FROM data WHERE Valid='F'")
+    cur.execute("DELETE FROM data WHERE State=2")
     cur.execute("SELECT time,id FROM data")
 
     rows = cur.fetchall()
@@ -61,7 +62,7 @@ def pairImgData(db,conn):
         if mergedArr[i][2] == "IMG" and mergedArr[i+1][2] == "DATA":
             imgDate = int(datetime.strptime(mergedArr[i][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s")) 
             dataDate = int(datetime.strptime(mergedArr[i+1][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
-            if abs(imgDate - dataDate) <= 5 and ((mergedArr[i][1],mergedArr[i+1][1]) not in pairs):
+            if abs(imgDate - dataDate) <= 1 and ((mergedArr[i][1],mergedArr[i+1][1]) not in pairs):
                 cur = conn.cursor()
                 cur.execute(sql, (mergedArr[i][1],mergedArr[i+1][1]))
                 if mergedArr[i][0] in arr:
@@ -70,19 +71,19 @@ def pairImgData(db,conn):
         elif mergedArr[i][2] == "DATA" and mergedArr[i+1][2] == "IMG":
             imgDate = int(datetime.strptime(mergedArr[i+1][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
             dataDate = int(datetime.strptime(mergedArr[i][0], '%d:%m:%y:%H:%M:%S:%f').strftime("%s"))
-            if abs(imgDate - dataDate) <= 5 and ((mergedArr[i+1][1],mergedArr[i][1]) not in pairs):
+            if abs(imgDate - dataDate) <= 1 and ((mergedArr[i+1][1],mergedArr[i][1]) not in pairs):
                 cur = conn.cursor()
                 cur.execute(sql, (mergedArr[i+1][1],mergedArr[i][1]))
                 if mergedArr[i+1][0] in arr:
                     arr.remove(mergedArr[i+1][0])
     print("Done making pairs")
 
-    sql = "DELETE FROM images WHERE filename=?"
+    """sql = "DELETE FROM images WHERE filename=?"
     for img in arr:
         cur = conn.cursor()
         cur.execute(sql, [img])
         os.remove("./static-content/images/" + img + ".jpg")
-    print("Removed unneccessary imgs")
+    print("Removed unneccessary imgs")"""
 
 
 def getTime(ms):
@@ -97,13 +98,20 @@ def splitVideo(db,conn,filepath,millisec):
 
     vidcap = cv2.VideoCapture(filepath +".mp4")
 
+    length = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = vidcap.get(cv2.CAP_PROP_FPS)
+    duration = length/fps * 1000 
+    print(length,fps,length/fps * 1000)
+
+
     count = 1
     success = True
     fn = getTime(ms)
     sql = "INSERT INTO images(filename) VALUES(?)"
 
     while success:
-        vidcap.set(cv2.CAP_PROP_POS_MSEC,(count*(millisec/10)))      
+        dur = (count*(millisec/10))
+        vidcap.set(cv2.CAP_PROP_POS_MSEC,dur)      
         success,image = vidcap.read()
 
         lfn = fn
@@ -113,8 +121,7 @@ def splitVideo(db,conn,filepath,millisec):
 
         image = np.rot90(image,3)
 
-        image_last = cv2.imread("./static-content/images/{}.jpg".format(lfn))
-        if np.array_equal(image,image_last):
+        if dur > duration:
             break
 
         cv2.imwrite("./static-content/images/" + fn  + ".jpg", image)     # save frame as PNG file

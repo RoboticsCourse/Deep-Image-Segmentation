@@ -35,6 +35,19 @@ app.get('/getFiles/', function (req, res) {
   res.download(folderpath + 'files.zip');
 })
 
+app.get('/getJSON/', function (req, res) {
+  const folderpath = "./static-content/images/";
+  res.download(folderpath + 'data.json');
+})
+
+app.get('/getModel/', function (req, res) {
+  const folderpath = "./";
+  child_process.execSync(`zip -r mdl model.*`, {
+    cwd: folderpath
+  });
+  res.download(folderpath + 'mdl.zip');
+})
+
 app.get('/getPairs/', function (req, res) {
   let sql = 'select d.time,d.F,d.S,d.Sensor1,d.Sensor2,d.State,i.filename from imgData as imgD inner join data as d on d.id = imgD.dataId  inner join images as i on i.id = imgD.imgId';
   pairs = [];
