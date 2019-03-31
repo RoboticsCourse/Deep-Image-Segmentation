@@ -32,11 +32,11 @@ app.get('/getFiles/', function (req, res) {
   child_process.execSync(`zip -r files *`, {
     cwd: folderpath
   });
-  res.send({"filename": "files.zip", "path": "./images/files.zip"})
+  res.send({ "filename": "files.zip", "path": "./images/files.zip" })
 })
 
 app.get('/getJSON/', function (req, res) {
-  res.send({"filename": "data.json", "path": "./images/data.json"})
+  res.send({ "filename": "data.json", "path": "./images/data.json" })
 })
 
 app.get('/getModel/', function (req, res) {
@@ -44,7 +44,7 @@ app.get('/getModel/', function (req, res) {
   child_process.execSync(`zip -r ./static-content/mdl.zip model.*`, {
     cwd: folderpath
   });
-  res.send({"filename": "mdl.zip", "path": "./mdl.zip"})
+  res.send({ "filename": "mdl.zip", "path": "./mdl.zip" })
 })
 
 app.get('/getDB/', function (req, res) {
@@ -52,7 +52,83 @@ app.get('/getDB/', function (req, res) {
   child_process.execSync(`zip -r ../static-content/db.zip *`, {
     cwd: folderpath
   });
-  res.send({"filename": "db.zip", "path": "./db.zip"})
+  res.send({ "filename": "db.zip", "path": "./db.zip" })
+})
+
+app.get('/clearDBData/', function (req, res) {
+  let sql = "DROP TABLE IF EXISTS data";
+
+  db.run(sql, function (err) {
+    if (err) {
+      console.log(err.message);
+    }
+    else {
+      sql = "CREATE TABLE data (id INTEGER PRIMARY KEY," +
+        "time VARCHAR(30) NOT NULL," +
+        "F VARCHAR(15) NOT NULL," +
+        "S VARCHAR(15) NOT NULL," +
+        "Sensor1 VARCHAR(15) NOT NULL," +
+        "Sensor2 VARCHAR(15) NOT NULL," +
+        "State VARCHAR(5) NOT NULL," +
+        "Valid VARCHAR(1) NOT NULL)";
+
+      db.run(sql, function (err) {
+        if (err) {
+          console.log(err.message);
+        }
+        else {
+          res.json({ "success": "Cleared Data Table" });
+        }
+      });
+    }
+  });
+})
+
+app.get('/clearDBImgs/', function (req, res) {
+  let sql = "DROP TABLE IF EXISTS images";
+
+  db.run(sql, function (err) {
+    if (err) {
+      console.log(err.message);
+    }
+    else {
+      sql = "CREATE TABLE images (id INTEGER PRIMARY KEY," +
+        "filename VARCHAR(30) NOT NULL)";
+
+      db.run(sql, function (err) {
+        if (err) {
+          console.log(err.message);
+        }
+        else {
+          res.json({ "success": "Cleared Image Table" });
+        }
+      });
+    }
+  });
+})
+
+app.get('/clearDBPair/', function (req, res) {
+  let sql = "DROP TABLE IF EXISTS imgData";
+
+  db.run(sql, function (err) {
+    if (err) {
+      console.log(err.message);
+    }
+    else {
+      sql += "CREATE TABLE imgData (id INTEGER PRIMARY KEY," +
+        "imgId INTEGER NOT NULL," +
+        "dataId INTEGER NOT NULL)";
+
+      db.run(sql, function (err) {
+        if (err) {
+          console.log(err.message);
+        }
+        else {
+          res.json({ "success": "Cleared Pair Table" });
+        }
+      });
+    }
+  });
 })
 
 app.get('/getPairs/', function (req, res) {

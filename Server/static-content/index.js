@@ -9,34 +9,34 @@ function getRecent() {
 
 function getFSInfo(fw, sp) {
         radius = 15
-        if (Math.pow(fw,2) + Math.pow(sp,2) <= Math.pow(radius,2)){
+        if (Math.pow(fw, 2) + Math.pow(sp, 2) <= Math.pow(radius, 2)) {
                 return "Bucket 4: Stopped";
         }
 
-        bin1Size = parseInt((255*2+1)/3);
-        bin1Num = parseInt((fw+254)/bin1Size);
+        bin1Size = parseInt((255 * 2 + 1) / 3);
+        bin1Num = parseInt((fw + 254) / bin1Size);
 
-        bin2Size = parseInt((150*2+1)/3);
-        bin2Num = parseInt((sp+149)/bin2Size);
+        bin2Size = parseInt((150 * 2 + 1) / 3);
+        bin2Num = parseInt((sp + 149) / bin2Size);
 
-        binNum = bin1Num + 3*bin2Num;
-        if (binNum == 3){
-                if (sp > 0){
+        binNum = bin1Num + 3 * bin2Num;
+        if (binNum == 3) {
+                if (sp > 0) {
                         return "Bucket 6: Forward Left";
                 }
                 return "Bucket 0: Backward Left";
         }
-        else if (binNum == 4){
-                if (sp > 0){
+        else if (binNum == 4) {
+                if (sp > 0) {
                         return "Bucket 3: Slightly Forward";
                 }
                 return "Bucket 5: Slightly Backward";
         }
-        else if (binNum == 5){
-                if (sp > 0){
+        else if (binNum == 5) {
+                if (sp > 0) {
                         return "Bucket 8: Forward Right";
                 }
-                return "Bucket 2: Backward Right"; 
+                return "Bucket 2: Backward Right";
         }
         else {
                 return "Bucket 7: Forward";
@@ -57,7 +57,7 @@ function getPairInfo() {
         });
 }
 
-function getJSON(){
+function getJSON() {
         $.ajax({
                 method: "GET",
                 url: "/getJSON/"
@@ -69,7 +69,7 @@ function getJSON(){
         });
 }
 
-function getDB(){
+function getDB() {
         $.ajax({
                 method: "GET",
                 url: "/getDB/"
@@ -81,7 +81,7 @@ function getDB(){
         });
 }
 
-function getModel(){
+function getModel() {
         $.ajax({
                 method: "GET",
                 url: "/getModel/"
@@ -93,7 +93,7 @@ function getModel(){
         });
 }
 
-function getFiles(){
+function getFiles() {
         $.ajax({
                 method: "GET",
                 url: "/getFiles/"
@@ -102,11 +102,51 @@ function getFiles(){
                 link.download = data.filename;
                 link.href = data.path;
                 link.click();
-                link.remove();
         });
 }
 
+function clearDB() {
+        clearData()
+        clearImages()
+        clearPairs()
+}
 
+function clearData() {
+        $.ajax({
+                method: "GET",
+                url: "/clearDBData/"
+        }).done(function (data) {
+                console.log(data.success);
+        });
+}
+
+function clearImages() {
+        $.ajax({
+                method: "GET",
+                url: "/clearDBImgs/"
+        }).done(function (data) {
+                console.log(data.success);
+        });
+}
+
+function clearPairs() {
+        $.ajax({
+                method: "GET",
+                url: "/clearDBPair/"
+        }).done(function (data) {
+                console.log(data.success);
+        });
+}
+
+function confirmation(){
+        let val = document.getElementById("confirm").value;
+        document.getElementById("confirm").value = "";
+        if (val == "Confirmed"){
+                return true;
+        }
+        console.log("Enter 'Confirmed' to press button");
+        return false;
+}
 
 $(function () {
         getRecent();
@@ -125,8 +165,30 @@ $(function () {
                 $("#img").hide();
         });
         $('#testing').click()
+
         $("#JSON").on('click', () => getJSON());
         $("#db").on('click', () => getDB());
         $("#files").on('click', () => getFiles());
         $("#model").on('click', () => getModel());
+
+        $("#clear-db").on('click', function () {
+                if (confirmation()){
+                        clearDB()
+                }
+        });
+        $("#clear-data").on('click', function () {
+                if (confirmation()){
+                        clearData()
+                }
+        });
+        $("#clear-img").on('click', function () {
+                if (confirmation()){
+                        clearImages()
+                }
+        });
+        $("#clear-pairs").on('click', function () {
+                if (confirmation()){
+                        clearPairs()
+                }
+        });
 });
