@@ -39,7 +39,7 @@ colors = ["red","green","blue","black","pink","yellow","purple","cyan","magenta"
 labels = ["B0","B1","B2","B3","B4","B5","B6","B7","B8"]
 
 try:
-    with open ("data.json", "r") as myfile:
+    with open ("./static-content/images/data.json", "r") as myfile:
         data = ''.join(myfile.readlines())
         data = json.loads(data)
 except:
