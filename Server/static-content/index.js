@@ -7,30 +7,43 @@ function getRecent() {
         });
 }
 
-function getFSInfo(x, y) {
-        if (x = 0 || y == 0) {
-                return "Stopped";
+function getFSInfo(fw, sp) {
+        radius = 15
+        if (Math.pow(fw,2) + Math.pow(sp,2) <= Math.pow(radius,2)){
+                return "Bucket 4: Stopped";
         }
-        else if (x < 0 && x >= -255) {
-                if (y > 0 && y <= 105) {
-                        return "Top Right";
+
+        bin1Size = parseInt((255*2+1)/3);
+        bin1Num = parseInt((fw+254)/bin1Size);
+
+        bin2Size = parseInt((150*2+1)/3);
+        bin2Num = parseInt((sp+149)/bin2Size);
+
+        binNum = bin1Num + 3*bin2Num;
+        if (binNum == 3){
+                if (sp > 0){
+                        return "Bucket 6: Forward Left";
                 }
-                else {
-                        return "Bottom Right"
+                return "Bucket 0: Backward Left";
+        }
+        else if (binNum == 4){
+                if (sp > 0){
+                        return "Bucket 3: Slightly Forward";
                 }
+                return "Bucket 5: Slightly Backward";
+        }
+        else if (binNum == 5){
+                if (sp > 0){
+                        return "Bucket 8: Forward Right";
+                }
+                return "Bucket 2: Backward Right"; 
         }
         else {
-                if (y > 0 && y <= 105) {
-                        return "Top Left";
-                }
-                else {
-                        return "Bottom Left";
-                }
+                return "Bucket 7: Forward";
         }
 }
 
 function getPairInfo() {
-        //<div class="card"><h2>Card</h2></div>
         $.ajax({
                 method: "GET",
                 url: "/getPairs/"
@@ -40,31 +53,80 @@ function getPairInfo() {
                 for (var i = 0; i < pairs.length; i++) {
                         cards += "</br></br><div class='card'><img id='img' " + "src='images/" + pairs[i]["Image Time"] + ".jpg' " + "height='500' width='350'></br><p>Image Time:" + pairs[i]["Image Time"] + " </br> Data Time: " + pairs[i]["Data Time"] + " </br>  Direction/Location: " + getFSInfo(pairs[i]["Forward"], pairs[i]["Speed"]) + " </br>  Forward: " + pairs[i]["Forward"] + " </br> Speed: " + pairs[i]["Speed"] + " </br> Sensor 1: " + pairs[i]["Sensor1"] + " </br> Sensor 2: " + pairs[i]["Sensor2"] + " </br> State: " + pairs[i]["State"] + " </br></p></div>"
                 }
-                console.log(data)
-                $("#gallery").html(cards);
+                //$("#gallery").html(cards);
         });
 }
 
+function getJSON(){
+        $.ajax({
+                method: "GET",
+                url: "/getJSON/"
+        }).done(function (data) {
+                var link = document.createElement("a");
+                link.download = data.filename;
+                link.href = data.path;
+                link.click();
+        });
+}
+
+function getDB(){
+        $.ajax({
+                method: "GET",
+                url: "/getDB/"
+        }).done(function (data) {
+                var link = document.createElement("a");
+                link.download = data.filename;
+                link.href = data.path;
+                link.click();
+        });
+}
+
+function getModel(){
+        $.ajax({
+                method: "GET",
+                url: "/getModel/"
+        }).done(function (data) {
+                var link = document.createElement("a");
+                link.download = data.filename;
+                link.href = data.path;
+                link.click();
+        });
+}
+
+function getFiles(){
+        $.ajax({
+                method: "GET",
+                url: "/getFiles/"
+        }).done(function (data) {
+                var link = document.createElement("a");
+                link.download = data.filename;
+                link.href = data.path;
+                link.click();
+                link.remove();
+        });
+}
+
+
+
 $(function () {
         getRecent();
-        //var galleryInterval;
         var testingInterval;
         $("#pics").on('click', function () {
                 clearInterval(testingInterval);
-                /*galleryInterval = setInterval(function(){
-                        getPairInfo();
-                },10000);*/
+                $("#img").show();
                 $("#test").hide();
-                $("#gallery").show();
                 getPairInfo();
         });
         $("#testing").on('click', function () {
-                //clearInterval(galleryInterval);
                 testingInterval = setInterval(function () {
                         getRecent();
                 }, 1000);
                 $("#test").show();
-                $("#gallery").hide();
+                $("#img").hide();
         });
         $('#testing').click()
+        $("#JSON").on('click', () => getJSON());
+        $("#db").on('click', () => getDB());
+        $("#files").on('click', () => getFiles());
+        $("#model").on('click', () => getModel());
 });

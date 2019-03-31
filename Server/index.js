@@ -32,20 +32,27 @@ app.get('/getFiles/', function (req, res) {
   child_process.execSync(`zip -r files *`, {
     cwd: folderpath
   });
-  res.download(folderpath + 'files.zip');
+  res.send({"filename": "files.zip", "path": "./images/files.zip"})
 })
 
 app.get('/getJSON/', function (req, res) {
-  const folderpath = "./static-content/images/";
-  res.download(folderpath + 'data.json');
+  res.send({"filename": "data.json", "path": "./images/data.json"})
 })
 
 app.get('/getModel/', function (req, res) {
   const folderpath = "./";
-  child_process.execSync(`zip -r mdl model.*`, {
+  child_process.execSync(`zip -r ./static-content/mdl.zip model.*`, {
     cwd: folderpath
   });
-  res.download(folderpath + 'mdl.zip');
+  res.send({"filename": "mdl.zip", "path": "./mdl.zip"})
+})
+
+app.get('/getDB/', function (req, res) {
+  const folderpath = "./db/";
+  child_process.execSync(`zip -r ../static-content/db.zip *`, {
+    cwd: folderpath
+  });
+  res.send({"filename": "db.zip", "path": "./db.zip"})
 })
 
 app.get('/getPairs/', function (req, res) {
@@ -69,7 +76,7 @@ app.get('/getPairs/', function (req, res) {
         "Speed": row.S
       });
     });
-    
+
     fs.writeFile("./static-content/images/data.json", JSON.stringify(pairs), 'utf8', err => {
       if (err) {
         console.log(err);
