@@ -115,7 +115,7 @@ app.get('/clearDBPair/', function (req, res) {
       console.log(err.message);
     }
     else {
-      sql += "CREATE TABLE imgData (id INTEGER PRIMARY KEY," +
+      sql = "CREATE TABLE imgData (id INTEGER PRIMARY KEY," +
         "imgId INTEGER NOT NULL," +
         "dataId INTEGER NOT NULL)";
 
